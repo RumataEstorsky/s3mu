@@ -23,36 +23,6 @@ install: ## Install required tools (openjdk, sbt, colima, regclient)
 deps: ## Check for dependency updates
 	sbt dependencyUpdates
 
-docdeps: ## Check for Docker image updates in docker-compose.yml
-	@command -v regctl >/dev/null 2>&1 || { echo "Install regctl: brew install regclient"; exit 1; }
-	@echo "Checking Docker image versions..."
-	@grep -E '^\s+image:' $(REPO_ROOT)docker-compose.yml | sed 's/.*image:\s*//' | while read img; do \
-		name=$$(echo "$$img" | cut -d: -f1); \
-		current=$$(echo "$$img" | cut -d: -f2); \
-		if [ "$$current" = "latest" ]; then \
-			printf "  %-45s %s\n" "$$name" "using :latest (consider pinning)"; \
-		else \
-			prefix=""; suffix=""; \
-			case "$$current" in v*) prefix="v";; esac; \
-			case "$$current" in *-alpine) suffix="-alpine";; esac; \
-			latest=$$(regctl tag ls "$$name" 2>/dev/null | \
-				grep -E "^$${prefix}[0-9]+\.[0-9]+\.[0-9]+$${suffix}$$" | \
-				sed 's/^v//' | sed 's/-alpine$$//' | sort -V | tail -1); \
-			[ -n "$$latest" ] && latest="$${prefix}$${latest}$${suffix}"; \
-			current_num=$$(echo "$$current" | sed 's/^v//' | sed 's/-alpine$$//'); \
-			if [ -n "$$latest" ] && [ "$$current" != "$$latest" ]; then \
-				latest_num=$$(echo "$$latest" | sed 's/^v//' | sed 's/-alpine$$//'); \
-				if [ "$$(printf '%s\n%s' "$$current_num" "$$latest_num" | sort -V | tail -1)" = "$$latest_num" ] && [ "$$current_num" != "$$latest_num" ]; then \
-					printf "  %-45s %s → %s\n" "$$name" "$$current" "$$latest"; \
-				else \
-					printf "  %-45s %s ✓\n" "$$name" "$$current"; \
-				fi; \
-			else \
-				printf "  %-45s %s ✓\n" "$$name" "$$current"; \
-			fi; \
-		fi; \
-	done
-
 format: ## Format all code with scalafmt
 	sbt scalafmtAll scalafmtSbt
 
@@ -71,9 +41,8 @@ it-test: ## Run integration tests (requires Colima or Docker)
 run: ## Run the application
 	sbt run
 
-clean: ## Clean all build artifacts (target/, .bsp/)
-	@find . -type d -name target -exec rm -rf {} + 2>/dev/null || true
-	@rm -rf .bsp
+clean: ## Clean all build artifacts
+	rm -rf target project/target project/project .bsp
 
 quality: format-check compile test ## Run all quality checks (format, compile, test)
 

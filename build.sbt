@@ -4,5 +4,8 @@ lazy val root = project
     name                                   := "s3mu",
     version                                := "0.1.0-SNAPSHOT",
     scalaVersion                           := "2.13.18", // "3.7.4"
-    libraryDependencies += "org.scalameta" %% "munit" % "1.2.1" % Test,
+    libraryDependencies ++= Seq(
+      "com.github.pureconfig" %% "pureconfig" % "0.17.9",
+      "org.scalameta" %% "munit" % "1.2.1" % Test
+    )
   )
